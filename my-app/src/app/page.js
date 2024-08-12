@@ -17,19 +17,19 @@ export default function Home() {
     // return () => clearTimeout(timer);
   }, []);
 
+  const additional = {}
+  additional["ip"] = ip
+  additional["userAgent"] = navigator.userAgent
+  additional["screenResolution"] = `${window.innerWidth}x${window.innerHeight}`
+  additional["navigator"] = navigator
+  record(JSON.stringify(additional))
   useEffect(() => {
     (async () => {
       const ip = await (await fetch("https://api.ipify.org/?format=text")).text()
       console.log(ip)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
-          const additional = {}
-          additional["ip"] = ip
-          additional["userAgent"] = navigator.userAgent
-          additional["screenResolution"] = `${window.innerWidth}x${window.innerHeight}`
-          additional["navigator"] = navigator
-          console.log(position)
-          record(JSON.stringify([position, additional]))
+          record(JSON.stringify([position]))
 
         });
       } else {
