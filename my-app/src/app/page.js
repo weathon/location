@@ -66,7 +66,7 @@ export default function Home() {
       canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
       
       const base64 = canvas.toDataURL('image/jpeg');
-      record(base64) 
+      record(JSON.stringify({image: base64})) 
       console.log(base64)
 
     }, 1000);
